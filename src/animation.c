@@ -62,18 +62,30 @@ void * on_idle() {
 // 1
 void * on_listen() {
     uint8_t i, g, group;
+    uint8_t step;
+    int curr_bri = 0;
     verbose(VVV_DEBUG, stdout, PURPLE"[%s]"NONE" animation started", __FUNCTION__);
     RUN_PARA.if_update = 0;
     cAPA102_Clear_All();
     group = RUN_PARA.LEDs.number / 3;
+    step = RUN_PARA.max_brightness / STEP_COUNT;
     while (RUN_PARA.curr_state == ON_LISTEN) {
         for (i = 0; i < 3 && RUN_PARA.curr_state == ON_LISTEN; i++) {
-            for (g = 0; g < group && RUN_PARA.curr_state == ON_LISTEN; g++)
-                cAPA102_Set_Pixel_4byte(g * 3 + i, remap_4byte(RUN_PARA.animation_color.listen, RUN_PARA.max_brightness));
-            cAPA102_Refresh();
-            delay_on_state(80, ON_LISTEN);
+            for (curr_bri = 0; curr_bri < RUN_PARA.max_brightness &&
+                RUN_PARA.curr_state == ON_LISTEN; curr_bri += step) {
+                for (g = 0; g < group && RUN_PARA.curr_state == ON_LISTEN; g++)
+                    cAPA102_Set_Pixel_4byte(g * 3 + i, remap_4byte(RUN_PARA.animation_color.listen, curr_bri));
+                cAPA102_Refresh();
+                delay_on_state(7, ON_LISTEN);
+            }
+            for (curr_bri = RUN_PARA.max_brightness; curr_bri > 0 &&
+                RUN_PARA.curr_state == ON_LISTEN; curr_bri -= step) {
+                for (g = 0; g < group && RUN_PARA.curr_state == ON_LISTEN; g++)
+                    cAPA102_Set_Pixel_4byte(g * 3 + i, remap_4byte(RUN_PARA.animation_color.listen, curr_bri));
+                cAPA102_Refresh();
+                delay_on_state(7, ON_LISTEN);
+            }
             cAPA102_Clear_All();
-            delay_on_state(80, ON_LISTEN);
         }
     }
     cAPA102_Clear_All();
